@@ -1,0 +1,14 @@
+[package]
+name = "splitter"
+version = "0.1.0"
+authors = ["Isaac Azuelos <isaac@azuelos.ca>"]
+
+[dependencies]
+calamine = "0.14.5"
+csv = "1.0.1"
+
+# clap = "2.32.0"
+
+# relm = "0.15.0"
+# gtk = "^0.3.0"
+# relm-derive = "^0.11.0"
