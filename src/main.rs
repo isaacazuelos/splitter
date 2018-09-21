@@ -1,22 +1,118 @@
+#[macro_use]
+extern crate clap;
+
 extern crate calamine;
 extern crate csv;
 
-mod table;
 mod error;
+mod table;
 
-use table::{Table};
+use std::path::PathBuf;
+use std::str::FromStr;
 
-const NUMBER_OF_OUT_FILES: usize = 3;
-const MAX_PER_OUT_FILE: Option<usize> = Some(100);
+use error::Error;
+use table::Table;
 
-const INPUT_FILE_NAME: &str = "input.xls";
+const DEFAULT_INPUT_PATH: &str = "input.xls";
+const DEFAULT_SHEET_NAME: &str = "Sheet1";
+const DEFAULT_CHUNK_COUNT: u64 = 5;
 
 const REMAINDER_FILE_NAME: &str = "remainder.csv";
 
-fn main() -> Result<(), Box<::std::error::Error>> {
-    let input = Table::read_excel(INPUT_FILE_NAME)?;
+struct Settings {
+    use_gui: bool,
+    path: Option<PathBuf>,
+    sheet: Option<String>,
+    chunks: Option<u64>,
+    max: Option<u64>,
+}
 
-    let (tables, rem) = input.split(NUMBER_OF_OUT_FILES, MAX_PER_OUT_FILE);
+impl Settings {
+    fn from(args: &clap::ArgMatches) -> Settings {
+        Settings {
+            use_gui: !args.is_present("no-gui"),
+            path: args.value_of("input").map(PathBuf::from),
+            sheet: args.value_of("sheet").map(String::from),
+            chunks: args
+                .value_of("chunks")
+                .and_then(|n| Settings::as_num_msg(n, "invalid number for chunks")),
+            max: args
+                .value_of("max")
+                .and_then(|n| Settings::as_num_msg(n, "invalid number for max")),
+        }
+    }
+    fn as_num_msg(arg: &str, msg: &str) -> Option<u64> {
+        match FromStr::from_str(arg) {
+            Err(_) => {
+                println!("{}", msg);
+                None
+            }
+            Ok(n) => Some(n),
+        }
+    }
+}
+
+fn main() -> Result<(), Box<::std::error::Error>> {
+    let app = clap::App::new("splitter")
+        .version(crate_version!())
+        .about("split excel files into chunks")
+        .author(crate_authors!())
+        .args(&[
+            clap::Arg::with_name("no-gui")
+                .help("use a command line interface")
+                .long("no-gui")
+                .short("nw")
+                .requires("no-gui"),
+            clap::Arg::with_name("input")
+                .help("The input excel file")
+                .requires("no-gui")
+                .index(1),
+            clap::Arg::with_name("sheet")
+                .help("The name of the sheet to split")
+                .long("sheet")
+                .short("s")
+                .requires("no-gui")
+                .takes_value(true),
+            clap::Arg::with_name("chunks")
+                .help("The number of chunks to produce")
+                .long("chunks")
+                .short("c")
+                .requires("no-gui")
+                .takes_value(true),
+            clap::Arg::with_name("max")
+                .help("Maximum rows per chunk")
+                .long("max")
+                .short("m")
+                .requires("no-gui")
+                .takes_value(true),
+        ]);
+
+    let matches = app.get_matches();
+    let settings = Settings::from(&matches);
+
+    if settings.use_gui {
+        gui()?;
+    } else {
+        command_line(settings)?;
+    }
+
+    Ok(())
+}
+
+fn command_line(settings: Settings) -> Result<(), Error> {
+    // Destruct Settings, loading defaults.
+    let path = settings
+        .path
+        .unwrap_or_else(|| PathBuf::from(DEFAULT_INPUT_PATH));
+    let sheet = settings
+        .sheet
+        .unwrap_or_else(|| DEFAULT_SHEET_NAME.to_owned());
+    let chunks = settings.chunks.unwrap_or(DEFAULT_CHUNK_COUNT);
+    let max = settings.max;
+
+    // Load the tables
+    let input = Table::read_excel(path, &sheet)?;
+    let (tables, rem) = input.split(chunks, max);
 
     for (i, table) in tables.iter().enumerate() {
         table.write_csv(format!("part_{}.csv", i))?;
@@ -31,4 +127,8 @@ fn main() -> Result<(), Box<::std::error::Error>> {
     }
 
     Ok(())
+}
+
+fn gui() -> Result<(), Error> {
+    unimplemented!("gui not implemented")
 }
