@@ -33,18 +33,18 @@ impl Settings {
             use_gui: !args.is_present("no-gui"),
             path: args.value_of("input").map(PathBuf::from),
             sheet: args.value_of("sheet").map(String::from),
-            chunks: args
-                .value_of("chunks")
-                .and_then(|n| Settings::as_num_msg(n, "invalid number for chunks")),
-            max: args
-                .value_of("max")
-                .and_then(|n| Settings::as_num_msg(n, "invalid number for max")),
+            chunks: args.value_of("chunks").and_then(|n| {
+                Settings::num_or_default_with_msg(n, "invalid number for chunks, using default")
+            }),
+            max: args.value_of("max").and_then(|n| {
+                Settings::num_or_default_with_msg(n, "invalid number for max, using default")
+            }),
         }
     }
-    fn as_num_msg(arg: &str, msg: &str) -> Option<u64> {
+    fn num_or_default_with_msg(arg: &str, msg: &str) -> Option<u64> {
         match FromStr::from_str(arg) {
             Err(_) => {
-                println!("{}", msg);
+                eprintln!("{}", msg);
                 None
             }
             Ok(n) => Some(n),
@@ -52,7 +52,7 @@ impl Settings {
     }
 }
 
-fn main() -> Result<(), Box<::std::error::Error>> {
+fn main() {
     let app = clap::App::new("splitter")
         .version(crate_version!())
         .about("split excel files into chunks")
@@ -90,13 +90,19 @@ fn main() -> Result<(), Box<::std::error::Error>> {
     let matches = app.get_matches();
     let settings = Settings::from(&matches);
 
-    if settings.use_gui {
-        gui()?;
+    let result = if settings.use_gui {
+        gui()
     } else {
-        command_line(settings)?;
-    }
+        command_line(settings)
+    };
 
-    Ok(())
+    match result {
+        Ok(()) => (),
+        Err(ref e) => {
+            eprintln!("error: {}", e);
+            ::std::process::exit(-1);
+        }
+    }
 }
 
 fn command_line(settings: Settings) -> Result<(), Error> {
