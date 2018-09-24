@@ -20,7 +20,6 @@ const DEFAULT_CHUNK_COUNT: u64 = 5;
 const REMAINDER_FILE_NAME: &str = "remainder.csv";
 
 struct Settings {
-    use_gui: bool,
     path: Option<PathBuf>,
     sheet: Option<String>,
     chunks: Option<u64>,
@@ -30,7 +29,6 @@ struct Settings {
 impl Settings {
     fn from(args: &clap::ArgMatches) -> Settings {
         Settings {
-            use_gui: !args.is_present("no-gui"),
             path: args.value_of("input").map(PathBuf::from),
             sheet: args.value_of("sheet").map(String::from),
             chunks: args.value_of("chunks").and_then(|n| {
@@ -58,45 +56,30 @@ fn main() {
         .about("split excel files into chunks")
         .author(crate_authors!())
         .args(&[
-            clap::Arg::with_name("no-gui")
-                .help("use a command line interface")
-                .long("no-gui")
-                .short("nw")
-                .requires("no-gui"),
             clap::Arg::with_name("input")
                 .help("The input excel file")
-                .requires("no-gui")
                 .index(1),
             clap::Arg::with_name("sheet")
                 .help("The name of the sheet to split")
                 .long("sheet")
                 .short("s")
-                .requires("no-gui")
                 .takes_value(true),
             clap::Arg::with_name("chunks")
                 .help("The number of chunks to produce")
                 .long("chunks")
                 .short("c")
-                .requires("no-gui")
                 .takes_value(true),
             clap::Arg::with_name("max")
                 .help("Maximum rows per chunk")
                 .long("max")
                 .short("m")
-                .requires("no-gui")
                 .takes_value(true),
         ]);
 
     let matches = app.get_matches();
     let settings = Settings::from(&matches);
 
-    let result = if settings.use_gui {
-        gui()
-    } else {
-        command_line(settings)
-    };
-
-    match result {
+    match command_line(settings) {
         Ok(()) => (),
         Err(ref e) => {
             eprintln!("error: {}", e);
@@ -133,8 +116,4 @@ fn command_line(settings: Settings) -> Result<(), Error> {
     }
 
     Ok(())
-}
-
-fn gui() -> Result<(), Error> {
-    unimplemented!("gui not implemented")
 }

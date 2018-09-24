@@ -1,5 +1,6 @@
 use calamine as xl;
 use calamine::*;
+use csv;
 
 use std::ffi::OsStr;
 use std::path::Path;
@@ -40,11 +41,20 @@ impl Table {
 
         Ok(Table { header, body })
     }
-    pub fn write_csv(&self, _path: impl AsRef<Path>) -> Result<Table, Error> {
-        unimplemented!("Table::write_csv not implemented")
+    pub fn write_csv(&self, _path: impl AsRef<Path>) -> Result<(), Error> {
+        let mut w = csv::Writer::from_writer(::std::io::stdout());
+
+        w.write_record(&self.header)?;
+        for row in &self.body {
+            w.write_record(row)?;
+        }
+
+        w.flush()?;
+
+        Ok(())
     }
     pub fn split(&self, _count: u64, _max_out: Option<u64>) -> (Vec<Table>, Option<Vec<Row>>) {
-        unimplemented!("Table::split not implementd")
+        unimplemented!("Table::split not implemented")
     }
 
     fn valid_ext(path: &Path) -> bool {
