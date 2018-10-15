@@ -7,6 +7,7 @@ extern crate csv;
 mod error;
 mod table;
 
+use std::ffi::OsStr;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -16,8 +17,6 @@ use table::Table;
 const DEFAULT_INPUT_PATH: &str = "input.xls";
 const DEFAULT_SHEET_NAME: &str = "Sheet1";
 const DEFAULT_CHUNK_COUNT: u64 = 5;
-
-const REMAINDER_FILE_NAME: &str = "remainder.csv";
 
 struct Settings {
     path: Option<PathBuf>,
@@ -100,20 +99,38 @@ fn command_line(settings: Settings) -> Result<(), Error> {
     let max = settings.max;
 
     // Load the tables
-    let input = Table::read_excel(path, &sheet)?;
+    let input = Table::read_excel(&path, &sheet)?;
     let (tables, rem) = input.split(chunks, max);
 
     for (i, table) in tables.iter().enumerate() {
-        table.write_csv(format!("part_{}.csv", i))?;
+        let out_path = path.with_file_name(format!(
+            "{}-part-{}.csv",
+            path.file_stem()
+                .unwrap_or_else(|| OsStr::new("output"))
+                .to_string_lossy(),
+            i + 1
+        ));
+
+        table.write_csv(out_path)?;
+        println!("Wrote {} rows to part {}.", table.body.len(), i+1);
     }
 
     if let Some(rows) = rem {
+        let row_count = rows.len();
         let rem_table = Table {
             header: input.header.clone(),
             body: rows,
         };
-        rem_table.write_csv(REMAINDER_FILE_NAME)?;
+        let rem_path =  path.with_file_name(format!(
+            "{}-remainder.csv",
+            path.file_stem()
+                .unwrap_or_else(|| OsStr::new("output"))
+                .to_string_lossy(),
+        ));
+        rem_table.write_csv(rem_path)?;
+        println!("Wrote {} rows to the remainder file.", row_count);
     }
 
+    println!("Done!");
     Ok(())
 }

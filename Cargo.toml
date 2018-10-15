@@ -5,6 +5,5 @@ authors = ["Isaac Azuelos <isaac@azuelos.ca>"]
 
 [dependencies]
 calamine = "0.14.6"
-csv = "1.0.1"
-
+csv = "1.0.2"
 clap = "2.32.0"

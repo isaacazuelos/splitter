@@ -3,6 +3,7 @@ use calamine::*;
 use csv;
 
 use std::ffi::OsStr;
+use std::iter::repeat;
 use std::path::Path;
 
 use error::Error;
@@ -23,8 +24,7 @@ impl Table {
         }
 
         let mut data = xl::open_workbook_auto(path)?;
-        let range = data
-            .worksheet_range(sheet)
+        let range = data.worksheet_range(sheet)
             .ok_or_else(|| Error::SheetMissing(sheet.to_owned()))??;
 
         let mut all_rows = Vec::new();
@@ -41,8 +41,8 @@ impl Table {
 
         Ok(Table { header, body })
     }
-    pub fn write_csv(&self, _path: impl AsRef<Path>) -> Result<(), Error> {
-        let mut w = csv::Writer::from_writer(::std::io::stdout());
+    pub fn write_csv(&self, path: impl AsRef<Path>) -> Result<(), Error> {
+        let mut w = csv::WriterBuilder::new().terminator(csv::Terminator::CRLF).from_path(path.as_ref())?;
 
         w.write_record(&self.header)?;
         for row in &self.body {
@@ -53,8 +53,30 @@ impl Table {
 
         Ok(())
     }
-    pub fn split(&self, _count: u64, _max_out: Option<u64>) -> (Vec<Table>, Option<Vec<Row>>) {
-        unimplemented!("Table::split not implemented")
+    pub fn split(&self, count: u64, max_out: Option<u64>) -> (Vec<Table>, Option<Vec<Row>>) {
+        let mut rem = max_out.map(|_| Vec::new());
+        let mut tables: Vec<Table> = repeat(Table {
+            body: Vec::new(),
+            header: self.header.clone(),
+        }).take(count as usize)
+            .collect();
+
+        for (i, row) in self.body.iter().enumerate() {
+            if let Some(max) = max_out {
+                if i < (max * count) as usize {
+                    tables[i % count as usize].body.push(row.clone());
+                } else {
+                    match rem {
+                        None => (),
+                        Some(ref mut v) => v.push(row.clone()),
+                    }
+                }
+            } else {
+                tables[i % count as usize].body.push(row.clone());
+            }
+        }
+
+        (tables, rem)
     }
 
     fn valid_ext(path: &Path) -> bool {
