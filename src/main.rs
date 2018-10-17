@@ -15,7 +15,7 @@ use error::Error;
 use table::Table;
 
 const DEFAULT_INPUT_PATH: &str = "input.xls";
-const DEFAULT_SHEET_NAME: &str = "Sheet1";
+const DEFAULT_SHEET_NAME: &str = "sheet1";
 const DEFAULT_CHUNK_COUNT: u64 = 5;
 
 struct Settings {

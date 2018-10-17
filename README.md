@@ -1,17 +1,8 @@
 # Splitter
 
-Split an excel file into parts.
+Split an excel file into CSV chunks.
 
-This is a pretty specific, single-purpose utility I made for work.
-
-## Features
-
-- [x] Split a CSV file into a number of smaller files by rows.
-- [x] Include the header in each file.
-- [x] Pick a number of files easily.
-- [x] Set a max number of rows for the files
-  - [x] Move extra rows into a remainder file.
-- [ ] Pick columns to include.
+This is a pretty specific, single-purpose utility I made for work, you probably don't want it.
 
 ## Installation
 
@@ -21,7 +12,7 @@ Grab the `.exe` file from the [releases][] page and move it to a safe place.
 
 ## Use
 
-Make sure it's in your `PATH` if you're not running it specifically. Use the built-in help for basic guidance.
+Make sure it's in your `PATH` if you're not running it specifically. Use the built-in `--help` for basic guidance.
 
 Typical usage would look like:
 
@@ -38,4 +29,4 @@ You can build the project with `cargo`. You'll need [Rust] installed.
 
 [Rust]: https://rust-lang.org
 
-Run tests with `cargo test`.
+If there were tests, you could run them with `cargo test`.
