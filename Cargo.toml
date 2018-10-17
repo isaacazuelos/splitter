@@ -2,6 +2,7 @@
 name = "splitter"
 version = "0.1.0"
 authors = ["Isaac Azuelos <isaac@azuelos.ca>"]
+license = "MIT"
 
 [dependencies]
 calamine = "0.14.6"

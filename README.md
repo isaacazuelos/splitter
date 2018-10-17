@@ -30,3 +30,9 @@ You can build the project with `cargo`. You'll need [Rust] installed.
 [Rust]: https://rust-lang.org
 
 If there were tests, you could run them with `cargo test`.
+
+## License
+
+This project is under the MIT license.
+
+See the included LICENSE file.
