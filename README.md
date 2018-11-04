@@ -2,7 +2,7 @@
 
 Split an excel file into CSV chunks.
 
-This is a pretty specific, single-purpose utility I made for work, you probably don't want it.
+This is a pretty specific, single-purpose utility I made for work. You probably don't want it.
 
 ## Installation
 
@@ -12,7 +12,7 @@ Grab the `.exe` file from the [releases][] page and move it to a safe place.
 
 ## Use
 
-Make sure it's in your `PATH` if you're not running it specifically. Use the built-in `--help` for basic guidance.
+Make sure it's in your `PATH` if you're not running it from it's full path. Use the built-in `--help` for basic guidance.
 
 Typical usage would look like:
 
